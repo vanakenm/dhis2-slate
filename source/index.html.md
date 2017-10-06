@@ -4,134 +4,135 @@ title: API Reference
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
   - ruby
-  - python
-  - javascript
 
 toc_footers:
   - <a href='#'>Sign Up for a Developer Key</a>
   - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
 
 includes:
-  - errors
+  - operators
 
 search: true
 ---
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the DHIS2 API! You can use our API to access all data in DHIS2 and actually execute any action possible through the UX.
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+The examples are using DHIS2 demo version at https://play.dhis2.org/demo/ - just replace the URL with your own.
 
-This example API documentation page was created with [Slate](https://github.com/tripit/slate). Feel free to edit it and use it as a base for your own API's documentation.
+We have language bindings in Shell and Ruby. You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+
+This example API documentation page was created with [Slate](https://github.com/tripit/slate).
 
 # Authentication
 
 > To authorize, use this code:
 
 ```ruby
-require 'kittn'
+require 'dhis2'
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
+client = Dhis2::Client.new(url: "https://play.dhis2.org/demo", user: "admin", password: "district")
 ```
 
 ```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
+# With shell, you can just pass the user and password with each request
+curl -u "admin:district" https://play.dhis2.org/demo/api/resources
+
 ```
 
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-```
-
-> Make sure to replace `meowmeowmeow` with your API key.
-
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
-
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
+> Make sure to replace `admin:district` with your owner user and password accordingly.
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+You must replace <code>admin:district</code> with your personal user and password.
 </aside>
 
-# Kittens
+# Meta data
 
-## Get All Kittens
+Most meta data are accessible through the same methods and parameters. Meta includes:
 
-```ruby
-require 'kittn'
+- Organisation Units, Groups and Group Sets
+- Data Elements and Groups
+- Data Sets
+- Indicators and Groups
+- ...
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
+Initial examples here use Organisation Units.
+
+## Pagination
+
+All the following commands return paginated results, starting with an header. Page size can be sent as parameters, and it's possible to disable paging altogether.
+
+```shell
+{
+  "pager": {
+    "page":1,
+    "pageCount":36,
+    "total":1797,
+    "pageSize":50,
+    "nextPage":"https://play.dhis2.org/demo/api/organisationUnits?page=2"
+  }
+}
 ```
 
-```python
-import kittn
+```ruby
+  org_units = Dhis2.client.organisation_units.list
+  org_units.pager.page       # current page
+  org_units.pager.page_count # number of pages
+  org_units.pager.total      # number of records
+```
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
+## Get All Organisation Units
+
+```ruby
+require 'dhis2'
+
+client = Dhis2::Client.new(url: "https://play.dhis2.org/demo", user: "admin", password: "district")
+all = client.organisation_units.list
+
+=> [#<Dhis2::Api::OrganisationUnit id="fp53yNbjYaN", display_name="1", children_ids=[]>,
+ #<Dhis2::Api::OrganisationUnit id="GhRejc2KYSl", display_name="2", children_ids=[]>, ...]
 ```
 
 ```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
+curl -u "admin:district" https://play.dhis2.org/demo/api/organisationUnits
 
 > The above command returns JSON structured like this:
 
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
+{
+  "pager": {
+    "page":1,
+    "pageCount":36,
+    "total":1797,
+    "pageSize":50,
+    "nextPage":"https://play.dhis2.org/demo/api/organisationUnits?page=2"
   },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
+  "organisationUnits":[
+    {
+      "id":"htiTioI7WGO",
+      "displayName":"ABBA_CS_RS2"
+    },
+    {
+      "id":"A17jXi1Y3W6",
+      "displayName":"ADECOM_RS7"
+    }, 
+    ... 
+  ]
+}
 ```
 
-This endpoint retrieves all kittens.
+This endpoint retrieves all organisation units. Note that results are paginated by default (default page size: 50)
 
 ### HTTP Request
 
-`GET http://example.com/api/kittens`
+`GET https://play.dhis2.org/demo/api/organisationUnits`
 
 ### Query Parameters
 
 Parameter | Default | Description
 --------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
-
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
+fields | [id,displayName] | Fields to retreive for each organisation unit.
+filter | none | Restriction on the set returned.
 
 ## Get a Specific Kitten
 
@@ -142,23 +143,9 @@ api = Kittn::APIClient.authorize!('meowmeowmeow')
 api.kittens.get(2)
 ```
 
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
 ```shell
 curl "http://example.com/api/kittens/2"
   -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
 ```
 
 > The above command returns JSON structured like this:
@@ -196,24 +183,10 @@ api = Kittn::APIClient.authorize!('meowmeowmeow')
 api.kittens.delete(2)
 ```
 
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
 ```shell
 curl "http://example.com/api/kittens/2"
   -X DELETE
   -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
 ```
 
 > The above command returns JSON structured like this:
